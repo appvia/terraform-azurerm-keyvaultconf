@@ -41,6 +41,15 @@ resource "azurerm_key_vault" "this" {
   tags = var.tags
 }
 
+# Assign Key Vault Administrator role to the deployment principal
+# This is needed to create and manage secrets during deployment
+resource "azurerm_role_assignment" "deployer_keyvault_admin" {
+  count                = var.assign_deployer_admin_role ? 1 : 0
+  scope                = azurerm_key_vault.this.id
+  role_definition_name = "Key Vault Administrator"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+
 # Add the deploy-time test secret
 resource "azurerm_key_vault_secret" "test_secret" {
   name         = "test-secret"
@@ -48,6 +57,7 @@ resource "azurerm_key_vault_secret" "test_secret" {
   key_vault_id = azurerm_key_vault.this.id
   
   depends_on = [
-    azurerm_key_vault.this
+    azurerm_key_vault.this,
+    var.assign_deployer_admin_role ? azurerm_role_assignment.deployer_keyvault_admin : []
   ]
 } 

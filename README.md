@@ -10,6 +10,7 @@ This Terraform module creates an Azure Key Vault with optional resource group cr
 * Creates a test secret using the provided noun and verb
 * Configurable network access controls
 * Support for managed identity access through Azure RBAC
+* Automatically assigns Key Vault Administrator role to the deployment identity
 
 ## Usage
 
@@ -88,6 +89,7 @@ module "keyvault" {
 | ip_allow_list | List of IP addresses or CIDR blocks that should be allowed to access the Key Vault | `list(string)` | `[]` | no |
 | secret_noun | A noun to use in the test secret | `string` | `"dog"` | no |
 | secret_verb | A verb to use in the test secret | `string` | `"barks"` | no |
+| assign_deployer_admin_role | Whether to assign Key Vault Administrator role to the identity running the deployment | `bool` | `true` | no |
 
 ## Outputs
 
@@ -105,12 +107,26 @@ module "keyvault" {
 
 This module enables RBAC authorization on the Key Vault, allowing any managed identity with appropriate Azure KeyVault role permissions on the resource group to access the vault without needing explicit access policies.
 
-Roles that can be assigned to managed identities include:
+### Auto-assigned Roles
+
+The module automatically assigns the following roles (unless disabled via `assign_deployer_admin_role = false`):
+- **Key Vault Administrator** to the identity running the Terraform deployment (to allow secret creation/management)
+
+### Other Roles for Managed Identities
+
+Other roles that can be assigned to managed identities include:
 - Key Vault Reader
 - Key Vault Secrets User
 - Key Vault Secrets Officer
 - Key Vault Certificates Officer
-- Key Vault Administrator
+
+### Deployment Identity Requirements
+
+The identity running the Terraform deployment must have:
+1. At least **Contributor** access to the subscription or resource group
+2. Sufficient permissions to assign RBAC roles (typically **User Access Administrator** or similar)
+
+If the identity running the deployment doesn't have permissions to assign roles, you'll need to manually assign the "Key Vault Administrator" role to enable successful secret creation.
 
 ## License
 

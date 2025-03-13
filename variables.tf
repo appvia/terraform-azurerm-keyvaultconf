@@ -64,4 +64,10 @@ variable "secret_verb" {
   description = "A verb to use in the test secret"
   type        = string
   default     = "barks"
+}
+
+variable "assign_deployer_admin_role" {
+  description = "Whether to assign Key Vault Administrator role to the identity running the deployment"
+  type        = bool
+  default     = true
 } 
